@@ -92,6 +92,8 @@ describe("Marketplace contract initialization test", function () {
         await marketplaceContract.deployed();
 
         await realEstateContract.connect(owner).setMarketplace(marketplaceContract.address);
+
+        await marketplaceContract.connect(owner).setMarketplace(marketplaceAddress, true);
 	});
 
     it("should create token by agency", async function() {

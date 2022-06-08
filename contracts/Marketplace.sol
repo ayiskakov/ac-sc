@@ -65,6 +65,22 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     mapping(uint256 => bool) private noReentrancy;
 
 
+
+    event propertyCreated(uint256 indexed tokenId, string uri, address indexed agency, address indexed seller, uint256 timestamp);
+   
+    // event tradeOpened(address indexed seller, uint256 id, uint256 amount, uint256 price, uint8 currency, uint256 timestamp);
+    // event tradeClosed(address indexed seller, uint256 id, uint256 amount, uint256 timestamp);
+    // event tradeSold(address indexed seller, address indexed buyer, uint256 id, uint256 amount, uint256 price, uint8 currency, uint256 timestamp);
+   
+    // event traded(uint256 tokenId, uint256 price, uint8 currency, address buyer, uint256 timestamp);
+    // event booked property
+    event propertyBooked(uint256 tokenId, uint256 fee, address buyer, bool poa, uint256 timestamp);
+    event propertBookingCancelled(uint256 tokenId, uint256 sellerFee, uint256 platformFee, uint256 agencyFee, uint256 timestamp);
+    event propertyPaid(uint256 tokenId, uint256 admFee, uint256 dldFee, uint256 ptFee, uint256 total, address buyer, uint256 timestamp);
+    event propertyTradeFulfilled(uint256 tokenId, address referrer, uint256 referralFee, uint256 sellerPart, uint256 agencyFee, uint256 platformFee, uint256 timestamp);
+    
+    event propertyTradeOpened(uint256 tokenId, address indexed agency, uint256 price, uint256 timestamp);
+    
     constructor(
         address _platform, 
         address _realEstate, 
@@ -102,6 +118,14 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     }
 
 
+    function setMarketplace(address _marketplace, bool _set) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (_set) {
+            _setupRole(MARKETPLACE_ROLE, _marketplace);
+        } else {
+            _revokeRole(MARKETPLACE_ROLE, _marketplace);
+        }
+    }
+
     function createProperty(string memory _uri, address _seller) public returns (uint256) {
         address sender = _msgSender();
         require(verifier.isVerifiedAgency(sender), "not agency");
@@ -110,6 +134,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
 
         properties[sender][tokenId] = Property(tokenId, 1, 0, sender, _seller, false);
         // EmitEvent(PropertyCreated(tokenId, uri)) TODO: emit event
+        emit propertyCreated(tokenId, _uri, sender, _seller, block.timestamp);
         return tokenId;
     }
 
@@ -128,6 +153,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         isBooked[_tokenId] = true;
         booking[_tokenId] = Booking(_tokenId, block.timestamp, bookingFee, sender, false, _usePoa);
         
+        emit propertyBooked(_tokenId, bookingFee, sender, _usePoa, block.timestamp);
         // EmitEvent(PropertyBooked(tokenId)) TODO: emit event
     }
     
@@ -149,7 +175,8 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         require(usdC.transfer(pt.agency, agencyFee), "not enough usdC");
 
         delete booking[_tokenId];
-        
+    //  event propertBookingCancelled(uint256 tokenId, uint256 timestamp);
+        emit propertBookingCancelled(_tokenId, sellerFee, platformFee, agencyFee, block.timestamp);
         // EmitEvent(PropertyBookingEnded(tokenId)) TODO: emit event
     }
 
@@ -177,10 +204,12 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         booking[_tokenId].paid = true;
         booking[_tokenId].buyer = _msgSender();
         // EmitEvent(PropertySold(tokenId)) TODO: emit event
+        // uint256 admFee, uint256 dldFee, uint256 ptFee, uint256 total, uint256 buyer, uint256 timestamp
+        emit propertyPaid(_tokenId, admFee, dldFee, ptFee, total, _msgSender(), block.timestamp);
         
     }
     
-    function fullfillBuy(uint256 _tokenId) public noReentrant(_tokenId) {
+    function fullfillBuy(uint256 _tokenId) public onlyRole(MARKETPLACE_ROLE) noReentrant(_tokenId) {
         require(isBooked[_tokenId], "not booked");
         require(booking[_tokenId].paid, "not paid");
 
@@ -211,6 +240,9 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         require(usdC.transfer(pt.seller, sellerPart), "not enough usdC");
         require(usdC.transfer(pt.agency, agencyFee), "not enough usdC");
         require(usdC.transfer(platform, platformFee), "not enough usdC");
+
+        emit propertyTradeFulfilled(_tokenId, referrer, referralFee, sellerPart, agencyFee, platformFee, block.timestamp);
+        // address referrer, uint256 referralFee, uint256 sellerPart, uint256 agencyFee, platformFee, uint256 timestamp
     }
 
     function putOnSale(uint256 _tokenId, uint256 _price) public {
@@ -229,6 +261,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         
         delete properties[sender][_tokenId];
         // EmitEvent(tradeOpened(msg.sender, _tokenId, _price)) TODO: emit event
+        emit propertyTradeOpened(_tokenId, sender, _price, block.timestamp);
     }
 
     // function removeFromSale(uint256 _tokenId) public noReentrant(_tokenId) {
