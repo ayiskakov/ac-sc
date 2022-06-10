@@ -77,7 +77,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     event propertyBooked(uint256 tokenId, uint256 fee, address buyer, bool poa, uint256 timestamp);
     event propertBookingCancelled(uint256 tokenId, uint256 sellerFee, uint256 platformFee, uint256 agencyFee, uint256 timestamp);
     event propertyPaid(uint256 tokenId, uint256 admFee, uint256 dldFee, uint256 ptFee, uint256 total, address buyer, uint256 timestamp);
-    event propertyTradeFulfilled(uint256 tokenId, address referrer, uint256 referralFee, uint256 sellerPart, uint256 agencyFee, uint256 platformFee, uint256 timestamp);
+    event propertyTradeFulfilled(uint256 tokenId, address buyer, address referrer, uint256 referralFee, uint256 sellerPart, uint256 agencyFee, uint256 platformFee, uint256 timestamp);
     
     event propertyTradeOpened(uint256 tokenId, address indexed agency, uint256 price, uint256 timestamp);
     
@@ -241,7 +241,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         require(usdC.transfer(pt.agency, agencyFee), "not enough usdC");
         require(usdC.transfer(platform, platformFee), "not enough usdC");
 
-        emit propertyTradeFulfilled(_tokenId, referrer, referralFee, sellerPart, agencyFee, platformFee, block.timestamp);
+        emit propertyTradeFulfilled(_tokenId, booking[_tokenId].buyer, referrer, referralFee, sellerPart, agencyFee, platformFee, block.timestamp);
         // address referrer, uint256 referralFee, uint256 sellerPart, uint256 agencyFee, platformFee, uint256 timestamp
     }
 
