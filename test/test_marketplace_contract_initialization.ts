@@ -305,7 +305,7 @@ describe("Marketplace contract initialization test", function () {
         const tx = marketplaceContract.connect(marketplace).fullfillBuy(1);
 
         await expect(tx).not.to.be.reverted;
-
+        // console.log(await (await tx).wait())
         const balanceAgency = await usdcContract.balanceOf(agencyAddress);
         const balanceTokenHolder = await usdcContract.balanceOf(tokenHolderAddress);
         const balanceMarketplace = await usdcContract.balanceOf(buyerAddress);
@@ -315,5 +315,85 @@ describe("Marketplace contract initialization test", function () {
         expect(balanceTokenHolder.sub(initialBalanceTokenHolder)).to.equal(PRICE.sub(platformFee));
         expect(initialBalanceMarketplace.sub(balanceMarketplace)).to.equal(PRICE.add(platformFee).add(administrativeFee).add(dldFee));
         expect(balanceOwner.sub(initialBalanceOwner)).to.equal(platformFee.add(dldFee).add(referralFee).add(administrativeFee));
+    });
+
+
+
+    it("should create token by agency and put it on sale and be booked by marketplace bought and fulfilled with poa", async function () {
+        const BOOKING_FEE_PERCENTAGE = eth.BigNumber.from(1000);
+        const PLATFORM_FEE_PERCENTAGE = eth.BigNumber.from(500);
+        const ADMINISTRATIVE_FEE_PERCENTAGE = eth.BigNumber.from(500);
+        const DLD_FEE_PERCENTAGE = eth.BigNumber.from(400);
+        const AGENCY_FEE_PERCENTAGE = eth.BigNumber.from(200);
+        const REFERRAL_FEE_PERCENTAGE = eth.BigNumber.from(100);
+
+        const ONE_DOLLAR = eth.BigNumber.from(1_000_000);
+        const HUNDRED_PERCENT = eth.BigNumber.from(10_000);
+        // This is actual value of the POA FEE
+        const POA_FEE = eth.BigNumber.from(2_000).mul(ONE_DOLLAR);
+        const PRICE = eth.BigNumber.from(1_000).mul(ONE_DOLLAR);
+
+        const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+        const platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+        const administrativeFee = PRICE.mul(ADMINISTRATIVE_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+        const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+        const agencyFee = PRICE.mul(AGENCY_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+        const referralFee = PRICE.mul(REFERRAL_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+
+        const finalPrice = PRICE.sub(bookingFee).add(platformFee).add(administrativeFee).add(dldFee);
+        console.log(finalPrice, 'final')
+        await feeContract.connect(multiSigner).setFeePercentage(
+            BOOKING_FEE_PERCENTAGE,
+            PLATFORM_FEE_PERCENTAGE,
+            ADMINISTRATIVE_FEE_PERCENTAGE,
+            DLD_FEE_PERCENTAGE
+        );
+        // Setting POA fee for the fee contract
+        await feeContract.connect(multiSigner).setPoaFee(POA_FEE)
+
+
+        const agencyAddress = await agency.getAddress();
+        const tokenHolderAddress = await tokenHolder.getAddress();
+        const buyerAddress = await marketplace.getAddress();
+        const ownerAddress = await owner.getAddress();
+
+        await verifierContract.connect(multiSigner).setVerificationAgency(agencyAddress, true);
+        await verifierContract.connect(multiSigner).setVerificationUser(buyerAddress, true);
+
+        await marketplaceContract.connect(agency).createProperty("", tokenHolderAddress);
+        await marketplaceContract.connect(agency).putOnSale(1, PRICE);
+
+        const initialBalanceMarketplaceContract = await usdcContract.balanceOf(marketplaceContract.address);
+        const initialBalanceMarketplace = await usdcContract.balanceOf(buyerAddress);
+        const initialBalanceTokenHolder = await usdcContract.balanceOf(tokenHolderAddress);
+        const initialBalanceOwner = await usdcContract.balanceOf(ownerAddress);
+
+        await usdcContract.connect(marketplace).increaseAllowance(marketplaceContract.address, bookingFee);
+
+        const tx = marketplaceContract.connect(marketplace).bookProperty(1, true);
+        await expect(tx).not.to.be.reverted;
+
+        // await usdcContract.connect(marketplace).increaseAllowance(marketplaceContract.address, finalPrice);
+
+        // await marketplaceContract.connect(marketplace).buyProperty(1);
+
+        // const finalBalanceMarketplaceContract = await usdcContract.balanceOf(marketplaceContract.address);
+        // const finalBalanceMarketplace = await usdcContract.balanceOf(buyerAddress);
+
+        // expect(finalBalanceMarketplaceContract.sub(initialBalanceMarketplaceContract)).to.equal(initialBalanceMarketplace.sub(finalBalanceMarketplace));
+
+        // const tx = marketplaceContract.connect(marketplace).fullfillBuy(1);
+
+        // await expect(tx).not.to.be.reverted;
+
+        // const balanceAgency = await usdcContract.balanceOf(agencyAddress);
+        // const balanceTokenHolder = await usdcContract.balanceOf(tokenHolderAddress);
+        // const balanceMarketplace = await usdcContract.balanceOf(buyerAddress);
+        // const balanceOwner = await usdcContract.balanceOf(ownerAddress);
+        
+        // expect(balanceAgency).to.equal(agencyFee);
+        // expect(balanceTokenHolder.sub(initialBalanceTokenHolder)).to.equal(PRICE.sub(platformFee));
+        // expect(initialBalanceMarketplace.sub(balanceMarketplace)).to.equal(PRICE.add(platformFee).add(administrativeFee).add(dldFee));
+        // expect(balanceOwner.sub(initialBalanceOwner)).to.equal(platformFee.add(dldFee).add(referralFee).add(administrativeFee));
     });
 }); 
