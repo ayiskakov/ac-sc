@@ -310,7 +310,7 @@ describe("Marketplace contract initialization test", function () {
         const balanceTokenHolder = await usdcContract.balanceOf(tokenHolderAddress);
         const balanceMarketplace = await usdcContract.balanceOf(buyerAddress);
         const balanceOwner = await usdcContract.balanceOf(ownerAddress);
-        
+        console.log( await usdcContract.balanceOf(marketplaceContract.address));
         expect(balanceAgency).to.equal(agencyFee);
         expect(balanceTokenHolder.sub(initialBalanceTokenHolder)).to.equal(PRICE.sub(platformFee));
         expect(initialBalanceMarketplace.sub(balanceMarketplace)).to.equal(PRICE.add(platformFee).add(administrativeFee).add(dldFee));

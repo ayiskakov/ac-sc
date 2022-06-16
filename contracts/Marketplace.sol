@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-// import "hardhat/console.sol";
+// import "hardhat/console.sol"
 
 
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
@@ -218,6 +218,8 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         uint256 sellerPart = pt.price.mul(9500).div(10000);
         uint256 agencyFee = pt.price.mul(200).div(10000);
         uint256 platformFee = fee.getDLDFee(pt.price).add(fee.getPlatformFee(pt.price)).add(fee.getAdministrativeFee(pt.price));
+        
+        platformFee = platformFee.add(pt.price.mul(200).div(10000));
 
         address referrer = referral.getReferrer(booking[_tokenId].buyer);
         uint256 referralFee = pt.price.mul(100).div(10000);
