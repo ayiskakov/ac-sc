@@ -12,7 +12,6 @@ describe("Fee contract with values", function () {
 	// 			 The 50% is 5000
 	const BOOKING_FEE_PERCENTAGE		= eth.BigNumber.from(1000);
 	const PLATFORM_FEE_PERCENTAGE		= eth.BigNumber.from(500);
-	const ADMINISTRATIVE_FEE_PERCENTAGE = eth.BigNumber.from(500);
 	const DLD_FEE_PERCENTAGE 			= eth.BigNumber.from(400);
 
 
@@ -25,7 +24,6 @@ describe("Fee contract with values", function () {
 
 	const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
 	const platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-	const administrativeFee = PRICE.mul(ADMINISTRATIVE_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
 	const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
 
 
@@ -45,7 +43,6 @@ describe("Fee contract with values", function () {
 		await feeContract.connect(feeChanger).setFeePercentage(
 			BOOKING_FEE_PERCENTAGE, 
 			PLATFORM_FEE_PERCENTAGE, 
-			ADMINISTRATIVE_FEE_PERCENTAGE, 
 			DLD_FEE_PERCENTAGE
 		);
 		// Setting POA fee for the fee contract
@@ -62,12 +59,6 @@ describe("Fee contract with values", function () {
 	it(`should have a platform fee percentage of ${PLATFORM_FEE_PERCENTAGE}`, async function () {
 		const feePercentage = await feeContract.getPlatformFeePercentage();
 		expect(feePercentage).to.eq(PLATFORM_FEE_PERCENTAGE);
-	});
-
-
-	it(`should have a administrative percentage fee of ${ADMINISTRATIVE_FEE_PERCENTAGE}`, async function () {
-		const feePercentage = await feeContract.getAdministrativeFeePercentage();
-		expect(feePercentage).to.eq(ADMINISTRATIVE_FEE_PERCENTAGE);
 	});
 
 
@@ -95,12 +86,6 @@ describe("Fee contract with values", function () {
 	});
 
 
-	it(`should have administrative fee of ${administrativeFee} with price ${PRICE}`, async function () {
-		const fee = await feeContract.getAdministrativeFee(PRICE);
-		expect(fee).to.eq(administrativeFee);
-	});
-
-
 	it(`should have dld fee of ${dldFee} with price ${PRICE}`, async function () {
 		const fee = await feeContract.getDLDFee(PRICE);
 		expect(fee).to.eq(dldFee);
@@ -115,12 +100,6 @@ describe("Fee contract with values", function () {
 
 	it("should have platform fee of 0 if input is zero", async function () {
 		const fee = await feeContract.getPlatformFee(0);
-		expect(fee).to.eq(0);
-	});
-
-
-	it("should have administrative fee of 0 if input is zero", async function () {
-		const fee = await feeContract.getAdministrativeFee(0);
 		expect(fee).to.eq(0);
 	});
 

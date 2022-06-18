@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 
 
 contract RealEstate is ERC1155Supply, ERC1155Burnable, AccessControl {
-    bytes32 public constant MARKETPLACE_ROLE = keccak256("MARKETPLACE_ROLE");
+    bytes32 public constant MARKETPLACE_CONTRACT_ROLE = keccak256("MARKETPLACE_CONTRACT_ROLE");
 
     using Counters for Counters.Counter;
     Counters.Counter public tokenIdCounter;
@@ -30,23 +30,23 @@ contract RealEstate is ERC1155Supply, ERC1155Burnable, AccessControl {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
-    function setMarketplace(address _marketplace) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setMarketplaceContract(address _marketplace) public onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_marketplace != address(0));
-        _setupRole(MARKETPLACE_ROLE, _marketplace);
+
+        _setupRole(MARKETPLACE_CONTRACT_ROLE, _marketplace);
     }
 
     function createToken(
-        uint256 _amount,
         address _owner
-    ) external onlyRole(MARKETPLACE_ROLE) returns (uint256) {
+    ) external onlyRole(MARKETPLACE_CONTRACT_ROLE) returns (uint256) {
         uint256 tokenId = tokenIdCounter.current();
         tokenIdCounter.increment();
-        _mint(_owner, tokenId, _amount, "");
+        _mint(_owner, tokenId, 1, "");
         return tokenId;
     }
     
     function isApprovedForAll(address _account, address _operator) public view override returns (bool) {
-        return hasRole(MARKETPLACE_ROLE, _operator) || super.isApprovedForAll(_account, _operator);
+        return hasRole(MARKETPLACE_CONTRACT_ROLE, _operator) || super.isApprovedForAll(_account, _operator);
     }
 
     function safeTransferFrom(
@@ -55,7 +55,7 @@ contract RealEstate is ERC1155Supply, ERC1155Burnable, AccessControl {
         uint256 id,
         uint256 amount,
         bytes memory data
-    ) public override onlyRole(MARKETPLACE_ROLE) {
+    ) public override onlyRole(MARKETPLACE_CONTRACT_ROLE) {
         super.safeTransferFrom(from, to, id, amount, data);
     }
 
@@ -68,7 +68,7 @@ contract RealEstate is ERC1155Supply, ERC1155Burnable, AccessControl {
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) public override onlyRole(MARKETPLACE_ROLE) {
+    ) public override onlyRole(MARKETPLACE_CONTRACT_ROLE) {
         super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
@@ -76,7 +76,7 @@ contract RealEstate is ERC1155Supply, ERC1155Burnable, AccessControl {
         address account,
         uint256 id,
         uint256 value
-    ) public override onlyRole(MARKETPLACE_ROLE) {
+    ) public override onlyRole(MARKETPLACE_CONTRACT_ROLE) {
         super.burn(account, id, value);
     }
 
@@ -84,7 +84,7 @@ contract RealEstate is ERC1155Supply, ERC1155Burnable, AccessControl {
         address account,
         uint256[] memory ids,
         uint256[] memory values
-    ) public override onlyRole(MARKETPLACE_ROLE) {
+    ) public override onlyRole(MARKETPLACE_CONTRACT_ROLE) {
         super.burnBatch(account, ids, values);
     }
 

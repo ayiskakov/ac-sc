@@ -14,7 +14,7 @@ describe("Fee contract initialization test", function () {
 		feeContract = await feeFactory.deploy();
 		await feeContract.deployed();
 	});
-
+	
 
 	it("should have a booking percentage of 0", async function () {
 		const feePercentage = await feeContract.getBookingPercentage();
@@ -24,12 +24,6 @@ describe("Fee contract initialization test", function () {
 
 	it("should have a platform fee percentage of 0", async function () {
 		const feePercentage = await feeContract.getPlatformFeePercentage();
-		expect(feePercentage).to.eq(0);
-	});
-
-
-	it("should have a administrative percentage fee of 0", async function () {
-		const feePercentage = await feeContract.getAdministrativeFeePercentage();
 		expect(feePercentage).to.eq(0);
 	});
 
@@ -58,12 +52,6 @@ describe("Fee contract initialization test", function () {
 	});
 
 
-	it("should have administrative fee of 0", async function () {
-		const fee = await feeContract.getAdministrativeFee(0);
-		expect(fee).to.eq(0);
-	});
-
-
 	it("should have dld fee of 0", async function () {
 		const fee = await feeContract.getDLDFee(0);
 		expect(fee).to.eq(0);
@@ -82,19 +70,13 @@ describe("Fee contract initialization test", function () {
 	});
 
 
-	it("should have administrative fee of 0 if input not zero", async function () {
-		const fee = await feeContract.getAdministrativeFee(999999);
-		expect(fee).to.eq(0);
-	});
-
-
 	it("should have dld fee of 0 if input not zero", async function () {
 		const fee = await feeContract.getDLDFee(999999);
 		expect(fee).to.eq(0);
 	});
 
 	it("should revert if user without fee changer role tries to set fees", async function() {
-        await expect(feeContract.connect(feeChanger).setFeePercentage(0, 0, 0, 0)).to.be.reverted;
+        await expect(feeContract.connect(feeChanger).setFeePercentage(0, 0, 0)).to.be.reverted;
     });
 
 	it("should set fee changer role to feeChanger signer", async function() {
@@ -105,7 +87,7 @@ describe("Fee contract initialization test", function () {
 		await expect(tx).to.be.not.reverted;
 
 
-		const txSetfee = feeContract.connect(feeChanger).setFeePercentage(0, 0, 0, 0)
+		const txSetfee = feeContract.connect(feeChanger).setFeePercentage(0, 0, 0)
 		await expect(txSetfee).to.be.not.reverted;
 
 		const txSetPOAFee = feeContract.connect(feeChanger).setPoaFee(poaFee)

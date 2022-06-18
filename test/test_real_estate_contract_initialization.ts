@@ -19,17 +19,17 @@ describe("RealEstate contract with initialization", function () {
 
     it("should set marketplace role to marketplace eth.Signer", async function() {
         const marketplaceAddress = await marketplace.getAddress();
-        const tx = realEstateContract.connect(owner).setMarketplace(marketplaceAddress);
+        const tx = realEstateContract.connect(owner).setMarketplaceContract(marketplaceAddress);
 
         await expect(tx).not.to.be.reverted;
     });
 
     it("should create one token to tokenHolder account and return id 1", async function() {
         const marketplaceAddress = await marketplace.getAddress();
-        await realEstateContract.connect(owner).setMarketplace(marketplaceAddress);
+        await realEstateContract.connect(owner).setMarketplaceContract(marketplaceAddress);
 
         const receiverAddress = await tokenHolder.getAddress();
-        await realEstateContract.connect(marketplace).createToken(1, receiverAddress);
+        await realEstateContract.connect(marketplace).createToken(receiverAddress);
 
         const tokenBalance = await realEstateContract.balanceOf(receiverAddress, 1);
         expect(tokenBalance).to.equal(1);
@@ -38,10 +38,10 @@ describe("RealEstate contract with initialization", function () {
 
     it("should create and transfer one token to owner account", async function() {
         const marketplaceAddress = await marketplace.getAddress();
-        await realEstateContract.connect(owner).setMarketplace(marketplaceAddress);
+        await realEstateContract.connect(owner).setMarketplaceContract(marketplaceAddress);
 
         const receiverAddress = await tokenHolder.getAddress();
-        await realEstateContract.connect(marketplace).createToken(1, receiverAddress);
+        await realEstateContract.connect(marketplace).createToken(receiverAddress);
 
         const tokenBalance = await realEstateContract.balanceOf(receiverAddress, 1);
         expect(tokenBalance).to.equal(1);
@@ -59,10 +59,10 @@ describe("RealEstate contract with initialization", function () {
 
     it("should burn token", async function() {
         const marketplaceAddress = await marketplace.getAddress();
-        await realEstateContract.connect(owner).setMarketplace(marketplaceAddress);
+        await realEstateContract.connect(owner).setMarketplaceContract(marketplaceAddress);
 
         const receiverAddress = await tokenHolder.getAddress();
-        await realEstateContract.connect(marketplace).createToken(1, receiverAddress);
+        await realEstateContract.connect(marketplace).createToken(receiverAddress);
 
         const tokenBalance = await realEstateContract.balanceOf(receiverAddress, 1);
         expect(tokenBalance).to.equal(1);
