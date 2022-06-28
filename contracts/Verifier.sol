@@ -11,6 +11,8 @@ contract Verifier is Context, AccessControl {
     mapping(address => bool) private agencies;
     mapping(address => bool) private users;
 
+    event AgencyVerified(address indexed user, bool verified);
+    event UserVerified(address indexed user, bool verified);
 
     constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -37,10 +39,12 @@ contract Verifier is Context, AccessControl {
     function setVerificationAgency(address _agency, bool _set) public onlyRole(VERIFIER_ROLE) {
         require(agencies[_agency] != _set, "already setted");
         agencies[_agency] = _set;
+        emit AgencyVerified(_agency, _set);
     }
 
     function setVerificationUser(address _user, bool _set) public onlyRole(VERIFIER_ROLE) {
         require(users[_user] != _set, "already setted");
         users[_user] = _set;
+        emit UserVerified(_user, _set);
     }
 }
