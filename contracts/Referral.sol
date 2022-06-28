@@ -11,6 +11,8 @@ contract Referral is AccessControl {
     mapping(address => address) private referrals;
     mapping(address => bool) private set;
 
+    event ReferralSetted(address indexed user, address indexed referrer);
+
     constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -27,6 +29,7 @@ contract Referral is AccessControl {
         require(!set[_referral], "already setted");
         referrals[_referral] = _referrer;
         set[_referral] = true;
+        emit ReferralSetted(_referral, _referrer);
     }
 
     function getReferrer(address _referral) public view returns (address) {
