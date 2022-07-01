@@ -206,9 +206,10 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     /// @dev no any reentrancy allowed
     /// @param _tokenId TokenId of a token to buy
     function buyProperty(uint256 _tokenId) public noReentrant(_tokenId) {
+        address sender = _msgSender();
         require(isBooked[_tokenId], "not booked");
         require(properties[address(this)][_tokenId].isOnSale, "not on sale");
-        require(booking[_tokenId].buyer == _msgSender(), "not your booking");
+        require(booking[_tokenId].buyer == sender, "not your booking");
         require(!booking[_tokenId].paid, "already paid");
 
         Property storage pt = properties[address(this)][_tokenId];
@@ -222,14 +223,14 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
             total = total.add(fee.getPoaFee());
         }
 
-        require(usdC.allowance(_msgSender(), address(this)) >= total, "not enough allowance");
-        require(usdC.transferFrom(_msgSender(), address(this), total), "not enough usdC");
+        require(usdC.allowance(sender, address(this)) >= total, "not enough allowance");
+        require(usdC.transferFrom(sender, address(this), total), "not enough usdC");
         
         pt.isOnSale = false;
         booking[_tokenId].paid = true;
-        booking[_tokenId].buyer = _msgSender();
+        booking[_tokenId].buyer = sender;
 
-        emit PropertyPaid(_tokenId, dldFee, ptFee, total, _msgSender(), block.timestamp);
+        emit PropertyPaid(_tokenId, dldFee, ptFee, total, sender, block.timestamp);
     }
     
     /// @notice Fulfill buy of token that has been bought by function buyProperty
