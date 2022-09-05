@@ -46,7 +46,6 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         uint256 fee;     // booking fee amount on the moment of booking
         address buyer;   // address of a booker and possible future buyer
         bool paid;       // if full sum has been paid; checks true after buyProperty function call
-        bool poa;        // is user wanting to use PoA
     }
 
     mapping(address => mapping(uint256 => Property)) public properties;
@@ -59,12 +58,11 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     mapping(uint256 => bool) private noReentrancy;
 
 
-    event PropertyCreated(uint256 indexed tokenId, string uri, address indexed agency, address indexed seller, uint256 timestamp);
-    event PropertyBooked(uint256 indexed tokenId, uint256 fee, address buyer, bool poa, uint256 timestamp);
-    event PropertBookingCancelled(uint256 indexed tokenId, uint256 sellerFee, uint256 platformFee, uint256 agencyFee, uint256 timestamp);
+    event PropertyCreated(uint256 indexed tokenId, string uri, address indexed agency, address indexed seller, uint256 price, uint256 timestamp);
+    event PropertyBooked(uint256 indexed tokenId, uint256 fee, address buyer, uint256 timestamp);
+    event PropertyBookingCancelled(uint256 indexed tokenId, uint256 sellerFee, uint256 platformFee, uint256 agencyFee, uint256 timestamp);
     event PropertyPaid(uint256 indexed tokenId, uint256 dldFee, uint256 ptFee, uint256 total, address buyer, uint256 timestamp);
-    event TradeFulfilled(uint256 indexed tokenId, address referrer, uint256 referralFee, uint256 timestamp);
-    event TradeOpened(uint256 tokenId, address indexed agency, uint256 price, uint256 timestamp);
+    event PropertyTraded(uint256 indexed tokenId, address referrer, uint256 referralFee, uint256 timestamp);
     
 
     constructor(
@@ -119,46 +117,23 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     /// @param _uri The _uri is url of a token metadata on ipfs
     /// @param _seller Address of the seller of the physical property
     /// @return tokenId tokenId from RealEstate smart-contract
-    function createProperty(string memory _uri, address _seller) public returns (uint256) {
+    function createProperty(string memory _uri, address _seller,  uint256 _price) public returns (uint256) {
         address sender = _msgSender();
         require(verifier.isVerifiedAgency(sender), "not agency");
         
-        uint256 tokenId = realEstate.createToken(sender);
+        uint256 tokenId = realEstate.createToken(address(this));
 
-        properties[sender][tokenId] = Property(tokenId, 0, sender, _seller, false);
+        properties[address(this)][tokenId] = Property(tokenId, _price, sender, _seller, true);
 
-        emit PropertyCreated(tokenId, _uri, sender, _seller, block.timestamp);
+        emit PropertyCreated(tokenId, _uri, sender, _seller, _price, block.timestamp);
+
         return tokenId;
-    }
-
-    /// @notice Put created token on sale
-    /// @dev no any reentrancy allowed
-    /// @param _tokenId TokenId of a token to put on sale
-    /// @param _price Price of a token
-    function putOnSale(uint256 _tokenId, uint256 _price) public {
-        require(_price > 0, "price");
-
-        address sender = _msgSender();
-
-        require(realEstate.balanceOf(sender, _tokenId) == 1, "balance");
-        require(!properties[sender][_tokenId].isOnSale, "already on sale");
-
-        realEstate.safeTransferFrom(sender, address(this), _tokenId, 1, "");
-        
-        Property memory property = properties[sender][_tokenId];
-
-        properties[address(this)][_tokenId] = Property(_tokenId, _price, property.agency, property.seller, true);
-        
-        delete properties[sender][_tokenId];
-
-        emit TradeOpened(_tokenId, sender, _price, block.timestamp);
     }
 
     /// @notice Booking property with payment of 10% in ERC-20 (particularly USDc)
     /// @dev no any reentrancy allowed
     /// @param _tokenId TokenId of a token to book
-    /// @param _usePoa If user wants to use PoA
-    function bookProperty(uint256 _tokenId, bool _usePoa) public noReentrant(_tokenId) {
+    function bookProperty(uint256 _tokenId) public noReentrant(_tokenId) {
         require(!isBooked[_tokenId], "already booked");
         require(properties[address(this)][_tokenId].isOnSale, "not on sale");
 
@@ -173,9 +148,9 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         require(usdC.transferFrom(sender, address(this), bookingFee), "not enough usdC");
         
         isBooked[_tokenId] = true;
-        booking[_tokenId] = Booking(_tokenId, block.timestamp, bookingFee, sender, false, _usePoa);
+        booking[_tokenId] = Booking(_tokenId, block.timestamp, bookingFee, sender, false);
         
-        emit PropertyBooked(_tokenId, bookingFee, sender, _usePoa, block.timestamp);
+        emit PropertyBooked(_tokenId, bookingFee, sender, block.timestamp);
     }
     
     /// @notice End booking of property with transfering 10% to platform, seller, and agency
@@ -188,7 +163,13 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         Property memory pt = properties[address(this)][_tokenId];
 
         uint256 bookingFee  = booking[_tokenId].fee;
-        
+
+        // uint256 sellerFee   = fee.getSellerFee(bookingFee);
+        // uint256 platformFee = fee.getPlatformFee(bookingFee);
+        // uint256 agencyFee   = fee.getAgencyFee(bookingFee);
+
+
+
         uint256 sellerFee   = bookingFee.mul(5000).div(10000);
         uint256 platformFee = bookingFee.mul(4000).div(10000);
         uint256 agencyFee   = bookingFee.mul(1000).div(10000);
@@ -199,7 +180,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
 
         delete booking[_tokenId];
         
-        emit PropertBookingCancelled(_tokenId, sellerFee, platformFee, agencyFee, block.timestamp);
+        emit PropertyBookingCancelled(_tokenId, sellerFee, platformFee, agencyFee, block.timestamp);
     }
 
     /// @notice Buy booked token by buyer that booked the token
@@ -218,10 +199,6 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         uint256 ptFee   = fee.getPlatformFee(pt.price);
 
         uint256 total = pt.price.sub(booking[_tokenId].fee).add(dldFee).add(ptFee);
-
-        if (booking[_tokenId].poa) {
-            total = total.add(fee.getPoaFee());
-        }
 
         require(usdC.allowance(sender, address(this)) >= total, "not enough allowance");
         require(usdC.transferFrom(sender, address(this), total), "not enough usdC");
@@ -251,10 +228,6 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         address referrer = referral.getReferrer(booking[_tokenId].buyer);
         uint256 referralFee = pt.price.mul(100).div(10000);
 
-        if (booking[_tokenId].poa) {
-            platformFee = platformFee.add(fee.getPoaFee());
-        }
-
         if (referrer == address(0)) {
             platformFee = platformFee.add(referralFee);
         } else {
@@ -271,7 +244,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
 
         realEstate.burn(address(this), _tokenId, 1);
 
-        emit TradeFulfilled(_tokenId, referrer, referralFee, block.timestamp);
+        emit PropertyTraded(_tokenId, referrer, referralFee, block.timestamp);
     }
 
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external pure override returns (bytes4) {

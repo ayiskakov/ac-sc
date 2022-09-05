@@ -13,7 +13,6 @@ contract Fee is AccessControl {
     uint256 private bookingPercentage;
     uint256 private platformFeePercentage;
     uint256 private dldFeePercentage;
-    uint256 private poaFee;
     
     using SafeMath for uint256;
 
@@ -51,11 +50,6 @@ contract Fee is AccessControl {
         emit DLDFeePercentageChanged(_dld, bt);
     }
 
-    function setPoaFee(uint256 _fee) public onlyRole(FEE_CHANGER_ROLE) {
-        poaFee = _fee;
-        emit PoaFeeChanged(poaFee, block.timestamp);
-    }
-
     function getBookingPercentage() public view returns (uint256) {
         return bookingPercentage;
     }
@@ -66,10 +60,6 @@ contract Fee is AccessControl {
 
     function getDLDFeePercentage() public view returns (uint256) {
         return dldFeePercentage;
-    }
-
-    function getPoaFee() public view returns (uint256) {
-        return poaFee;
     }
 
     function getBookingFee(uint256 _amount) public view returns (uint256) {
