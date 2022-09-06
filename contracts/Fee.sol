@@ -13,7 +13,8 @@ contract Fee is AccessControl {
     uint256 private bookingPercentage;
     uint256 private platformFeePercentage;
     uint256 private dldFeePercentage;
-    
+    uint256 private poaFee;
+
     using SafeMath for uint256;
 
     event BookingPercentageChanged(uint256 newPercentage, uint256 timestamp);
@@ -33,6 +34,11 @@ contract Fee is AccessControl {
 
     function setFeeChanger(address _feeChanger) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _setupRole(FEE_CHANGER_ROLE, _feeChanger);
+    }
+
+    function setPoaFee(uint256 _fee) public onlyRole(FEE_CHANGER_ROLE) {
+        poaFee = _fee;
+        emit PoaFeeChanged(poaFee, block.timestamp);
     }
 
     function setFeePercentage(uint256 _booking, uint256 _platform, uint256 _dld) public onlyRole(FEE_CHANGER_ROLE) checkPercentage(_booking) checkPercentage(_platform) checkPercentage(_dld) {
@@ -68,6 +74,10 @@ contract Fee is AccessControl {
 
     function getPlatformFee(uint256 _amount) public view returns (uint256) {
         return _amount.mul(platformFeePercentage).div(10000);
+    }
+
+    function getPoaFee() public view returns (uint256) {
+        return poaFee;
     }
 
     function getDLDFee(uint256 _amount) public view returns (uint256) {

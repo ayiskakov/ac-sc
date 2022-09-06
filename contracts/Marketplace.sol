@@ -46,6 +46,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         uint256 fee;     // booking fee amount on the moment of booking
         address buyer;   // address of a booker and possible future buyer
         bool paid;       // if full sum has been paid; checks true after buyProperty function call
+        bool poa;        // is user wanting to use PoA
     }
 
     mapping(address => mapping(uint256 => Property)) public properties;
@@ -59,7 +60,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
 
 
     event PropertyCreated(uint256 indexed tokenId, string uri, address indexed agency, address indexed seller, uint256 price, uint256 timestamp);
-    event PropertyBooked(uint256 indexed tokenId, uint256 fee, address buyer, uint256 timestamp);
+    event PropertyBooked(uint256 indexed tokenId, uint256 fee, address buyer, bool poa, uint256 timestamp);
     event PropertyBookingCancelled(uint256 indexed tokenId, uint256 sellerFee, uint256 platformFee, uint256 agencyFee, uint256 timestamp);
     event PropertyPaid(uint256 indexed tokenId, uint256 dldFee, uint256 ptFee, uint256 total, address buyer, uint256 timestamp);
     event PropertyTraded(uint256 indexed tokenId, address referrer, uint256 referralFee, uint256 timestamp);
@@ -133,7 +134,8 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     /// @notice Booking property with payment of 10% in ERC-20 (particularly USDc)
     /// @dev no any reentrancy allowed
     /// @param _tokenId TokenId of a token to book
-    function bookProperty(uint256 _tokenId) public noReentrant(_tokenId) {
+    /// @param _usePoa If user wants to use PoA
+    function bookProperty(uint256 _tokenId, bool _usePoa) public noReentrant(_tokenId) {
         require(!isBooked[_tokenId], "already booked");
         require(properties[address(this)][_tokenId].isOnSale, "not on sale");
 
@@ -148,9 +150,8 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         require(usdC.transferFrom(sender, address(this), bookingFee), "not enough usdC");
         
         isBooked[_tokenId] = true;
-        booking[_tokenId] = Booking(_tokenId, block.timestamp, bookingFee, sender, false);
-        
-        emit PropertyBooked(_tokenId, bookingFee, sender, block.timestamp);
+        booking[_tokenId] = Booking(_tokenId, block.timestamp, bookingFee, sender, false, _usePoa);
+        emit PropertyBooked(_tokenId, bookingFee, sender, _usePoa, block.timestamp);
     }
     
     /// @notice End booking of property with transfering 10% to platform, seller, and agency
@@ -200,6 +201,10 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
 
         uint256 total = pt.price.sub(booking[_tokenId].fee).add(dldFee).add(ptFee);
 
+        if (booking[_tokenId].poa) {
+            total = total.add(fee.getPoaFee());
+        }
+
         require(usdC.allowance(sender, address(this)) >= total, "not enough allowance");
         require(usdC.transferFrom(sender, address(this), total), "not enough usdC");
         
@@ -227,6 +232,10 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
 
         address referrer = referral.getReferrer(booking[_tokenId].buyer);
         uint256 referralFee = pt.price.mul(100).div(10000);
+
+        if (booking[_tokenId].poa) {
+            platformFee = platformFee.add(fee.getPoaFee());
+        }
 
         if (referrer == address(0)) {
             platformFee = platformFee.add(referralFee);

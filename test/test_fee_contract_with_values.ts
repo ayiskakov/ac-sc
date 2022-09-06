@@ -5,7 +5,7 @@ import { ethers as eth } from "ethers";
 describe("Fee contract with values", function () {
   let feeContract: eth.Contract;
   let feeFactory: eth.ContractFactory;
-  let owner: eth.Signer, feeChanger: eth.Signer;
+  let owner: eth.Signer, feeChanger: eth.Signer, addr3: eth.Signer;
 
   // Setting up fee percentage variables
   // @example: The 100% for smart contract is 10000
@@ -16,6 +16,8 @@ describe("Fee contract with values", function () {
 
   const ONE_DOLLAR = eth.BigNumber.from(1_000_000);
   const HUNDRED_PERCENT = eth.BigNumber.from(10_000);
+  // This is actual value of the POA FEE
+  const POA_FEE = eth.BigNumber.from(2_000).mul(ONE_DOLLAR);
 
   const PRICE = eth.BigNumber.from(50_000).mul(ONE_DOLLAR);
 
@@ -24,7 +26,7 @@ describe("Fee contract with values", function () {
   const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
 
   beforeEach(async function () {
-    [owner, feeChanger] = await ethers.getSigners();
+    [owner, feeChanger, addr3] = await ethers.getSigners();
 
     feeFactory = await ethers.getContractFactory("Fee");
     feeContract = await feeFactory.deploy();
@@ -42,6 +44,8 @@ describe("Fee contract with values", function () {
         PLATFORM_FEE_PERCENTAGE,
         DLD_FEE_PERCENTAGE
       );
+    // Setting POA fee for the fee contract
+    await feeContract.connect(feeChanger).setPoaFee(POA_FEE);
   });
 
   it(`should have a booking percentage of ${BOOKING_FEE_PERCENTAGE}`, async function () {
@@ -52,6 +56,11 @@ describe("Fee contract with values", function () {
   it(`should have a platform fee percentage of ${PLATFORM_FEE_PERCENTAGE}`, async function () {
     const feePercentage = await feeContract.getPlatformFeePercentage();
     expect(feePercentage).to.eq(PLATFORM_FEE_PERCENTAGE);
+  });
+
+  it(`should have a poa fee of ${POA_FEE}`, async function () {
+    const fee = await feeContract.getPoaFee();
+    expect(fee).to.eq(POA_FEE);
   });
 
   it(`should have a dld fee percentage of ${DLD_FEE_PERCENTAGE}`, async function () {
