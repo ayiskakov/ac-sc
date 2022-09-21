@@ -278,7 +278,8 @@ describe("Marketplace contract initialization test", function () {
     expect(
       finalBalanceMarketplaceContract.sub(initialBalanceMarketplaceContract)
     ).to.equal(initialBalanceMarketplace.sub(finalBalanceMarketplace));
-
+    
+    await marketplaceContract.connect(marketplace).signedAllDoc(1, true);
     const tx = marketplaceContract.connect(marketplace).fulfillBuy(1);
 
     await expect(tx).not.to.be.reverted;
@@ -338,5 +339,58 @@ describe("Marketplace contract initialization test", function () {
 
     const tx = marketplaceContract.connect(marketplace).bookProperty(1, false);
     await expect(tx).not.to.be.reverted;
+  });
+
+  it("should create token by agency and put it on sale and be booked by marketplace bought and fulfilled but signed all docs", async function () {
+    const ONE_DOLLAR = eth.BigNumber.from(1_000_000);
+
+    const PRICE = eth.BigNumber.from(500).mul(ONE_DOLLAR);
+
+    const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+    let platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+    const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+
+    const finalPrice = PRICE.sub(bookingFee).add(platformFee).add(dldFee);
+
+    const tokenHolderAddress = await tokenHolder.getAddress();
+
+    const buyerAddress = await marketplace.getAddress();
+
+    await marketplaceContract
+      .connect(agency)
+      .createProperty("", tokenHolderAddress, PRICE);
+
+    const initialBalanceMarketplaceContract = await usdcContract.balanceOf(
+      marketplaceContract.address
+    );
+    const initialBalanceMarketplace = await usdcContract.balanceOf(
+      buyerAddress
+    );
+
+    await usdcContract
+      .connect(marketplace)
+      .increaseAllowance(marketplaceContract.address, bookingFee);
+
+    await marketplaceContract.connect(marketplace).bookProperty(1, false);
+
+    await usdcContract
+      .connect(marketplace)
+      .increaseAllowance(marketplaceContract.address, finalPrice);
+
+    await marketplaceContract.connect(marketplace).buyProperty(1);
+
+    const finalBalanceMarketplaceContract = await usdcContract.balanceOf(
+      marketplaceContract.address
+    );
+    const finalBalanceMarketplace = await usdcContract.balanceOf(buyerAddress);
+
+    expect(
+      finalBalanceMarketplaceContract.sub(initialBalanceMarketplaceContract)
+    ).to.equal(initialBalanceMarketplace.sub(finalBalanceMarketplace));
+    
+    const tx = marketplaceContract.connect(marketplace).fulfillBuy(1);
+
+    await expect(tx).to.be.reverted;
+   
   });
 });

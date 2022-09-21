@@ -47,6 +47,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         address buyer;   // address of a booker and possible future buyer
         bool paid;       // if full sum has been paid; checks true after buyProperty function call
         bool poa;        // is user wanting to use PoA
+        bool signedAllDoc; // is buyer sign all the docs that are required before final payment 
     }
 
     mapping(address => mapping(uint256 => Property)) public properties;
@@ -150,7 +151,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         require(usdC.transferFrom(sender, address(this), bookingFee), "not enough usdC");
         
         isBooked[_tokenId] = true;
-        booking[_tokenId] = Booking(_tokenId, block.timestamp, bookingFee, sender, false, _usePoa);
+        booking[_tokenId] = Booking(_tokenId, block.timestamp, bookingFee, sender, false, _usePoa, false);
         emit PropertyBooked(_tokenId, bookingFee, sender, _usePoa, block.timestamp);
     }
     
@@ -221,6 +222,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     function fulfillBuy(uint256 _tokenId) public onlyRole(MARKETPLACE_ROLE) noReentrant(_tokenId) {
         require(isBooked[_tokenId], "not booked");
         require(booking[_tokenId].paid, "not paid");
+        require(booking[_tokenId].signedAllDoc, "not signed all docs");
 
         Property storage pt = properties[address(this)][_tokenId];
         
@@ -256,6 +258,11 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         emit PropertyTraded(_tokenId, referrer, referralFee, block.timestamp);
     }
 
+    function signedAllDoc(uint _tokenId, bool _signedAllDoc) public onlyRole(MARKETPLACE_ROLE){
+          require(isBooked[_tokenId], "not booked");
+          require(booking[_tokenId].paid, "not paid");
+          booking[_tokenId].signedAllDoc = _signedAllDoc;
+    }
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external pure override returns (bytes4) {
         return bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"));
     }
