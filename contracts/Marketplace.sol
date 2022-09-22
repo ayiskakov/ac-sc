@@ -194,6 +194,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         require(properties[address(this)][_tokenId].isOnSale, "not on sale");
         require(booking[_tokenId].buyer == sender, "not your booking");
         require(!booking[_tokenId].paid, "already paid");
+        require(booking[_tokenId].signedAllDoc, "not signed all docs");
 
         Property storage pt = properties[address(this)][_tokenId];
 
@@ -222,7 +223,6 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     function fulfillBuy(uint256 _tokenId) public onlyRole(MARKETPLACE_ROLE) noReentrant(_tokenId) {
         require(isBooked[_tokenId], "not booked");
         require(booking[_tokenId].paid, "not paid");
-        require(booking[_tokenId].signedAllDoc, "not signed all docs");
 
         Property storage pt = properties[address(this)][_tokenId];
         
