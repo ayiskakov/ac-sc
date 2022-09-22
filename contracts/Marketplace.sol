@@ -260,7 +260,6 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
 
     function signedAllDoc(uint _tokenId, bool _signedAllDoc) public onlyRole(MARKETPLACE_ROLE){
           require(isBooked[_tokenId], "not booked");
-          require(booking[_tokenId].paid, "not paid");
           booking[_tokenId].signedAllDoc = _signedAllDoc;
     }
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external pure override returns (bytes4) {

@@ -207,6 +207,7 @@ describe("Marketplace contract initialization test", function () {
       .connect(marketplace)
       .increaseAllowance(marketplaceContract.address, finalPrice);
 
+    await marketplaceContract.connect(marketplace).signedAllDoc(1, true);
     const tx = marketplaceContract.connect(marketplace).buyProperty(1);
 
     await expect(tx).not.to.be.reverted;
@@ -268,6 +269,7 @@ describe("Marketplace contract initialization test", function () {
       .connect(marketplace)
       .increaseAllowance(marketplaceContract.address, finalPrice);
 
+    await marketplaceContract.connect(marketplace).signedAllDoc(1, true);
     await marketplaceContract.connect(marketplace).buyProperty(1);
 
     const finalBalanceMarketplaceContract = await usdcContract.balanceOf(
@@ -279,7 +281,6 @@ describe("Marketplace contract initialization test", function () {
       finalBalanceMarketplaceContract.sub(initialBalanceMarketplaceContract)
     ).to.equal(initialBalanceMarketplace.sub(finalBalanceMarketplace));
     
-    await marketplaceContract.connect(marketplace).signedAllDoc(1, true);
     const tx = marketplaceContract.connect(marketplace).fulfillBuy(1);
 
     await expect(tx).not.to.be.reverted;
@@ -341,7 +342,7 @@ describe("Marketplace contract initialization test", function () {
     await expect(tx).not.to.be.reverted;
   });
 
-  it("should create token by agency and put it on sale and be booked by marketplace bought and fulfilled but signed all docs", async function () {
+  it("should create token by agency and put it on sale and be booked by marketplace bought and fulfilled but not signed all docs", async function () {
     const ONE_DOLLAR = eth.BigNumber.from(1_000_000);
 
     const PRICE = eth.BigNumber.from(500).mul(ONE_DOLLAR);
@@ -354,18 +355,10 @@ describe("Marketplace contract initialization test", function () {
 
     const tokenHolderAddress = await tokenHolder.getAddress();
 
-    const buyerAddress = await marketplace.getAddress();
-
     await marketplaceContract
       .connect(agency)
       .createProperty("", tokenHolderAddress, PRICE);
 
-    const initialBalanceMarketplaceContract = await usdcContract.balanceOf(
-      marketplaceContract.address
-    );
-    const initialBalanceMarketplace = await usdcContract.balanceOf(
-      buyerAddress
-    );
 
     await usdcContract
       .connect(marketplace)
@@ -377,20 +370,11 @@ describe("Marketplace contract initialization test", function () {
       .connect(marketplace)
       .increaseAllowance(marketplaceContract.address, finalPrice);
 
-    await marketplaceContract.connect(marketplace).buyProperty(1);
-
-    const finalBalanceMarketplaceContract = await usdcContract.balanceOf(
-      marketplaceContract.address
-    );
-    const finalBalanceMarketplace = await usdcContract.balanceOf(buyerAddress);
-
-    expect(
-      finalBalanceMarketplaceContract.sub(initialBalanceMarketplaceContract)
-    ).to.equal(initialBalanceMarketplace.sub(finalBalanceMarketplace));
-    
-    const tx = marketplaceContract.connect(marketplace).fulfillBuy(1);
-
+    const tx = marketplaceContract.connect(marketplace).buyProperty(1);
+  
     await expect(tx).to.be.reverted;
+
+    
    
   });
 });
