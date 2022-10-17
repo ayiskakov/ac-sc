@@ -32,7 +32,6 @@ describe("Marketplace contract initialization test", function () {
 
   const BOOKING_FEE_PERCENTAGE = eth.BigNumber.from(1000);
   const PLATFORM_FEE_PERCENTAGE = eth.BigNumber.from(500);
-  const DLD_FEE_PERCENTAGE = eth.BigNumber.from(400);
 
   // _platform,  _realEstate,  _verifier,  _fee,  _referral,  _usdcAddress,  _priceFeed) {
   beforeEach(async function () {
@@ -104,8 +103,7 @@ describe("Marketplace contract initialization test", function () {
       .connect(multiSigner)
       .setFeePercentage(
         BOOKING_FEE_PERCENTAGE,
-        PLATFORM_FEE_PERCENTAGE,
-        DLD_FEE_PERCENTAGE
+        PLATFORM_FEE_PERCENTAGE
       );
 
     const agencyAddress = await agency.getAddress();
@@ -179,9 +177,8 @@ describe("Marketplace contract initialization test", function () {
 
     const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
     const platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
 
-    const finalPrice = PRICE.sub(bookingFee).add(platformFee).add(dldFee);
+    const finalPrice = PRICE.sub(bookingFee).add(platformFee);
 
     const tokenHolderAddress = await tokenHolder.getAddress();
     const buyerAddress = await marketplace.getAddress();
@@ -232,11 +229,10 @@ describe("Marketplace contract initialization test", function () {
 
     const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
     let platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
     const agencyFee = PRICE.mul(AGENCY_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
     // const referralFee = PRICE.mul(REFERRAL_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
 
-    const finalPrice = PRICE.sub(bookingFee).add(platformFee).add(dldFee);
+    const finalPrice = PRICE.sub(bookingFee).add(platformFee);
 
     const agencyAddress = await agency.getAddress();
     const tokenHolderAddress = await tokenHolder.getAddress();
@@ -295,8 +291,6 @@ describe("Marketplace contract initialization test", function () {
     expect(balanceTokenHolder.sub(initialBalanceTokenHolder)).to.equal(
       PRICE.mul(9500).div(10000)
     );
-    // expect(initialBalanceMarketplace.sub(balanceMarketplace)).to.equal(dldFee.add(platformFee).add(referralFee));
-    // expect(balanceOwner.sub(initialBalanceOwner)).to.equal(platformFee.add(dldFee).add(referralFee));
   });
 
   it("should create token by agency and put it on sale and be booked by marketplace bought and fulfilled with poa", async function () {
@@ -307,11 +301,9 @@ describe("Marketplace contract initialization test", function () {
 
     const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
     // const platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    // const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+
     // const agencyFee = PRICE.mul(AGENCY_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
     // const referralFee = PRICE.mul(REFERRAL_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-
-    // const finalPrice = PRICE.sub(bookingFee).add(platformFee).add(dldFee);
 
     // const agencyAddress = await agency.getAddress();
     const tokenHolderAddress = await tokenHolder.getAddress();
@@ -349,9 +341,8 @@ describe("Marketplace contract initialization test", function () {
 
     const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
     let platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
 
-    const finalPrice = PRICE.sub(bookingFee).add(platformFee).add(dldFee);
+    const finalPrice = PRICE.sub(bookingFee).add(platformFee);
 
     const tokenHolderAddress = await tokenHolder.getAddress();
 

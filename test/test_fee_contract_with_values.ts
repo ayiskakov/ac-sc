@@ -11,19 +11,17 @@ describe("Fee contract with values", function () {
   // @example: The 100% for smart contract is 10000
   // 			 The 50% is 5000
   const BOOKING_FEE_PERCENTAGE = eth.BigNumber.from(1000);
-  const PLATFORM_FEE_PERCENTAGE = eth.BigNumber.from(500);
-  const DLD_FEE_PERCENTAGE = eth.BigNumber.from(400);
+  const PLATFORM_FEE_PERCENTAGE = eth.BigNumber.from(1000);
 
   const ONE_DOLLAR = eth.BigNumber.from(1_000_000);
   const HUNDRED_PERCENT = eth.BigNumber.from(10_000);
   // This is actual value of the POA FEE
   const POA_FEE = eth.BigNumber.from(2_000).mul(ONE_DOLLAR);
 
-  const PRICE = eth.BigNumber.from(50_000).mul(ONE_DOLLAR);
+  const PRICE = eth.BigNumber.from(500_000).mul(ONE_DOLLAR);
 
   const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
   const platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-  const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
 
   beforeEach(async function () {
     [owner, feeChanger, addr3] = await ethers.getSigners();
@@ -42,7 +40,6 @@ describe("Fee contract with values", function () {
       .setFeePercentage(
         BOOKING_FEE_PERCENTAGE,
         PLATFORM_FEE_PERCENTAGE,
-        DLD_FEE_PERCENTAGE
       );
     // Setting POA fee for the fee contract
     await feeContract.connect(feeChanger).setPoaFee(POA_FEE);
@@ -53,19 +50,9 @@ describe("Fee contract with values", function () {
     expect(feePercentage).to.eq(BOOKING_FEE_PERCENTAGE);
   });
 
-  it(`should have a platform fee percentage of ${PLATFORM_FEE_PERCENTAGE}`, async function () {
-    const feePercentage = await feeContract.getPlatformFeePercentage();
-    expect(feePercentage).to.eq(PLATFORM_FEE_PERCENTAGE);
-  });
-
   it(`should have a poa fee of ${POA_FEE}`, async function () {
     const fee = await feeContract.getPoaFee();
     expect(fee).to.eq(POA_FEE);
-  });
-
-  it(`should have a dld fee percentage of ${DLD_FEE_PERCENTAGE}`, async function () {
-    const feePercentage = await feeContract.getDLDFeePercentage();
-    expect(feePercentage).to.eq(DLD_FEE_PERCENTAGE);
   });
 
   it(`should have booking fee of ${bookingFee} with price ${PRICE}`, async function () {
@@ -75,12 +62,7 @@ describe("Fee contract with values", function () {
 
   it(`should have platform fee of ${platformFee} with price ${PRICE}`, async function () {
     const fee = await feeContract.getPlatformFee(PRICE);
-    expect(fee).to.eq(platformFee);
-  });
-
-  it(`should have dld fee of ${dldFee} with price ${PRICE}`, async function () {
-    const fee = await feeContract.getDLDFee(PRICE);
-    expect(fee).to.eq(dldFee);
+    expect(fee).to.eq(eth.BigNumber.from(60000).mul(ONE_DOLLAR));
   });
 
   it("should have booking fee of 0 if input is zero", async function () {
@@ -93,8 +75,23 @@ describe("Fee contract with values", function () {
     expect(fee).to.eq(0);
   });
 
-  it("should have dld fee of 0 if input is zero", async function () {
-    const fee = await feeContract.getDLDFee(0);
-    expect(fee).to.eq(0);
+  it("should pass test", async function () {
+    const fee = await feeContract.getPlatformFee(300000);
+    expect(fee).to.eq(40000);
+
+    const fee2 = await feeContract.getPlatformFee(350000);
+    expect(fee2).to.eq(40000);
+
+    const fee3 = await feeContract.getPlatformFee(400001);
+    expect(fee3).to.eq(50000);
+
+    const fee4 = await feeContract.getPlatformFee(450000);
+    expect(fee4).to.eq(50000);
+
+    const fee5 = await feeContract.getPlatformFee(500003);
+    expect(fee5).to.eq(60000);
+
+    const fee6 = await feeContract.getPlatformFee(550000);
+    expect(fee6).to.eq(60000);
   });
 });

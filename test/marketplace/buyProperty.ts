@@ -32,7 +32,6 @@ describe("Buy Property", function () {
 
   const BOOKING_FEE_PERCENTAGE = eth.BigNumber.from(1000);
   const PLATFORM_FEE_PERCENTAGE = eth.BigNumber.from(500);
-  const DLD_FEE_PERCENTAGE = eth.BigNumber.from(400);
 
   // _platform,  _realEstate,  _verifier,  _fee,  _referral,  _usdcAddress,  _priceFeed) {
   beforeEach(async function () {
@@ -103,8 +102,7 @@ describe("Buy Property", function () {
       .connect(multiSigner)
       .setFeePercentage(
         BOOKING_FEE_PERCENTAGE,
-        PLATFORM_FEE_PERCENTAGE,
-        DLD_FEE_PERCENTAGE
+        PLATFORM_FEE_PERCENTAGE
       );
 
     const agencyAddress = await agency.getAddress();
@@ -124,10 +122,11 @@ describe("Buy Property", function () {
     const PRICE = eth.BigNumber.from(500).mul(ONE_DOLLAR);
 
     const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    let platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+    let platformFee = await feeContract
+      .connect(multiSigner)
+      .getCustomerFee(PRICE);
 
-    const finalPrice = PRICE.sub(bookingFee).add(platformFee).add(dldFee);
+    const finalPrice = PRICE.sub(bookingFee).add(platformFee);
 
     const tokenHolderAddress = await tokenHolder.getAddress();
 
@@ -159,10 +158,11 @@ describe("Buy Property", function () {
     const PRICE = eth.BigNumber.from(500).mul(ONE_DOLLAR);
 
     const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    let platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+    let platformFee = await feeContract
+      .connect(multiSigner)
+      .getCustomerFee(PRICE);
 
-    const finalPrice = PRICE.sub(bookingFee).add(platformFee).add(dldFee);
+    const finalPrice = PRICE.sub(bookingFee).add(platformFee);
 
     const tokenHolderAddress = await tokenHolder.getAddress();
 
@@ -180,9 +180,9 @@ describe("Buy Property", function () {
         .connect(marketplace)
         .increaseAllowance(marketplaceContract.address, finalPrice);
      
-        await marketplaceContract.connect(marketplace).signedAllDoc(1, true);
-        const tx = marketplaceContract.connect(marketplace).buyProperty(1);
-        await expect(tx).not.to.be.reverted;
+      await marketplaceContract.connect(marketplace).signedAllDoc(1, true);
+      const tx = marketplaceContract.connect(marketplace).buyProperty(1);
+      await expect(tx).not.to.be.reverted;
      
   });
 
@@ -193,10 +193,11 @@ describe("Buy Property", function () {
     const PRICE = eth.BigNumber.from(500).mul(ONE_DOLLAR);
 
     const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    let platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+    let platformFee = await feeContract
+      .connect(multiSigner)
+      .getCustomerFee(PRICE);
 
-    const finalPrice = PRICE.sub(bookingFee).add(platformFee).add(dldFee);
+    const finalPrice = PRICE.sub(bookingFee).add(platformFee);
 
     const tokenHolderAddress = await tokenHolder.getAddress();
 
@@ -214,8 +215,8 @@ describe("Buy Property", function () {
         .connect(marketplace)
         .increaseAllowance(marketplaceContract.address, finalPrice);
      
-        const tx = marketplaceContract.connect(marketplace).buyProperty(1);
-        await expect(tx).to.be.reverted;
+      const tx = marketplaceContract.connect(marketplace).buyProperty(1);
+      await expect(tx).to.be.reverted;
      
   });
 

@@ -32,7 +32,6 @@ describe("Fullfill Buy", function () {
 
   const BOOKING_FEE_PERCENTAGE = eth.BigNumber.from(1000);
   const PLATFORM_FEE_PERCENTAGE = eth.BigNumber.from(500);
-  const DLD_FEE_PERCENTAGE = eth.BigNumber.from(400);
 
   // _platform,  _realEstate,  _verifier,  _fee,  _referral,  _usdcAddress,  _priceFeed) {
   beforeEach(async function () {
@@ -103,8 +102,7 @@ describe("Fullfill Buy", function () {
       .connect(multiSigner)
       .setFeePercentage(
         BOOKING_FEE_PERCENTAGE,
-        PLATFORM_FEE_PERCENTAGE,
-        DLD_FEE_PERCENTAGE
+        PLATFORM_FEE_PERCENTAGE
       );
 
     const agencyAddress = await agency.getAddress();
@@ -123,8 +121,7 @@ describe("Fullfill Buy", function () {
 
     const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
     let platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    const finalPrice = PRICE.sub(bookingFee).add(platformFee).add(dldFee);
+    const finalPrice = PRICE.sub(bookingFee).add(platformFee);
 
     const tokenHolderAddress = await tokenHolder.getAddress();
     const buyerAddress = await marketplace.getAddress();
@@ -175,8 +172,7 @@ describe("Fullfill Buy", function () {
 
     const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
     let platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    const dldFee = PRICE.mul(DLD_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    const finalPrice = PRICE.sub(bookingFee).add(platformFee).add(dldFee);
+    const finalPrice = PRICE.sub(bookingFee).add(platformFee);
 
     const tokenHolderAddress = await tokenHolder.getAddress();
     const buyerAddress = await marketplace.getAddress();

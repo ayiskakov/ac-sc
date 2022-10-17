@@ -198,10 +198,9 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
 
         Property storage pt = properties[address(this)][_tokenId];
 
-        uint256 dldFee  = fee.getDLDFee(pt.price);
-        uint256 ptFee   = fee.getPlatformFee(pt.price);
+        uint256 ptFee   = fee.getCustomerFee(pt.price);
 
-        uint256 total = pt.price.sub(booking[_tokenId].fee).add(dldFee).add(ptFee);
+        uint256 total = pt.price.sub(booking[_tokenId].fee).add(ptFee);
 
         if (booking[_tokenId].poa) {
             total = total.add(fee.getPoaFee());
@@ -214,7 +213,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         booking[_tokenId].paid = true;
         booking[_tokenId].buyer = sender;
 
-        emit PropertyPaid(_tokenId, dldFee, ptFee, total, sender, block.timestamp);
+        emit PropertyPaid(_tokenId, 0, ptFee, total, sender, block.timestamp);
     }
     
     /// @notice Fulfill buy of token that has been bought by function buyProperty
@@ -228,7 +227,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         
         uint256 sellerPart  = pt.price.mul(9500).div(10000);
         uint256 agencyFee   = pt.price.mul(200).div(10000);
-        uint256 platformFee = fee.getDLDFee(pt.price).add(fee.getPlatformFee(pt.price));
+        uint256 platformFee = fee.getPlatformFee(pt.price);
         
         platformFee = platformFee.add(pt.price.mul(200).div(10000));
 
