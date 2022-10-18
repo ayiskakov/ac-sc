@@ -288,7 +288,7 @@ describe("Marketplace contract initialization test", function () {
 
     expect(balanceAgency).to.equal(agencyFee);
     expect(balanceTokenHolder.sub(initialBalanceTokenHolder)).to.equal(
-      PRICE.mul(9500).div(10000)
+      PRICE.sub(await feeContract.getCustomerFee(PRICE))
     );
   });
 
