@@ -19,6 +19,8 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/metatx/MinimalForwarder.sol";
 
+import "hardhat/console.sol";
+
 contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     bytes32 public constant MARKETPLACE_ROLE = keccak256("MARKETPLACE");
 
@@ -222,11 +224,11 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         require(booking[_tokenId].paid, "not paid");
 
         Property storage pt = properties[address(this)][_tokenId];
-        
-        uint256 sellerPart  = pt.price.mul(9500).div(10000);
+    
+        uint256 sellerPart  = pt.price - fee.getCustomerFee(pt.price);
         uint256 agencyFee   = pt.price.mul(200).div(10000);
         uint256 platformFee = fee.getPlatformFee(pt.price);
-        
+
         platformFee = platformFee.sub(agencyFee);
 
         address referrer = referral.getReferrer(booking[_tokenId].buyer);
@@ -235,16 +237,24 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         if (booking[_tokenId].poa) {
             platformFee = platformFee.add(fee.getPoaFee());
         }
+        // pt.price     500000000
+        // sellerPart   475000000
+        // agencyFee     10000000
+        // platformFee   50000000
 
-        if (referrer == address(0)) {
-            platformFee = platformFee.add(referralFee);
-        } else {
+        if (referrer != address(0)) {
+            platformFee = platformFee.sub(referralFee);
             if (referrer == pt.agency) {
                 agencyFee = agencyFee.add(referralFee);
             } else {
                 require(usdC.transfer(referrer, referralFee), "not enough usdC");
             }
         }
+
+        console.log("pt.price", pt.price);
+        console.log("sellerPart", sellerPart);
+        console.log("agencyFee", agencyFee);
+        console.log("platformFee", platformFee);
 
         require(usdC.transfer(pt.seller, sellerPart), "not enough usdC");
         require(usdC.transfer(pt.agency, agencyFee), "not enough usdC");
