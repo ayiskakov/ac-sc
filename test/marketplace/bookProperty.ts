@@ -32,7 +32,6 @@ describe("Book Property", function () {
 
   const BOOKING_FEE_PERCENTAGE = eth.BigNumber.from(1000);
   const PLATFORM_FEE_PERCENTAGE = eth.BigNumber.from(500);
-  const DLD_FEE_PERCENTAGE = eth.BigNumber.from(400);
 
   // _platform,  _realEstate,  _verifier,  _fee,  _referral,  _usdcAddress,  _priceFeed) {
   beforeEach(async function () {
@@ -103,8 +102,7 @@ describe("Book Property", function () {
       .connect(multiSigner)
       .setFeePercentage(
         BOOKING_FEE_PERCENTAGE,
-        PLATFORM_FEE_PERCENTAGE,
-        DLD_FEE_PERCENTAGE
+        PLATFORM_FEE_PERCENTAGE
       );
 
     const agencyAddress = await agency.getAddress();
