@@ -14,12 +14,49 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const Greeter = await ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
+  const Fee = await ethers.getContractFactory("Fee");
+  const fee = await Fee.deploy();
 
-  await greeter.deployed();
+  await fee.deployed();
 
-  console.log("Greeter deployed to:", greeter.address);
+  console.log("Fee deployed to:", fee.address);
+
+
+  const RealEstate = await ethers.getContractFactory("RealEstate");
+  const realEstate = await RealEstate.deploy();
+
+  await realEstate.deployed();
+
+  console.log("RealEstate deployed to:", realEstate.address);
+
+  const Verifier = await ethers.getContractFactory("Verifier");
+  const verifier = await Verifier.deploy();
+
+  await verifier.deployed();
+
+  console.log("Verifier deployed to:", verifier.address);
+
+  const Referral = await ethers.getContractFactory("Referral");
+  const referral = await Referral.deploy();
+
+  await referral.deployed();
+
+  console.log("Referral deployed to:", referral.address);
+
+  const Marketplace = await ethers.getContractFactory("Marketplace");
+  const marketplace = await Marketplace.deploy(
+    `${process.env.platform_address}`,
+    realEstate.address,
+    verifier.address,
+    fee.address,
+    referral.address,
+    `${process.env.usdc_address}`,
+    `${process.env.forwarder_address}`
+    );
+ 
+  await marketplace.deployed();
+
+  console.log("Marketplace deployed to:", marketplace.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
