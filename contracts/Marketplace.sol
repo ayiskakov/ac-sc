@@ -170,8 +170,6 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         // uint256 platformFee = fee.getPlatformFee(bookingFee);
         // uint256 agencyFee   = fee.getAgencyFee(bookingFee);
 
-
-
         uint256 sellerFee   = bookingFee.mul(5000).div(10000);
         uint256 platformFee = bookingFee.mul(4000).div(10000);
         uint256 agencyFee   = bookingFee.mul(1000).div(10000);
@@ -198,7 +196,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
 
         Property storage pt = properties[address(this)][_tokenId];
 
-        uint256 ptFee   = fee.getCustomerFee(pt.price);
+        uint256 ptFee = fee.getCustomerFee(pt.price);
 
         uint256 total = pt.price.sub(booking[_tokenId].fee).add(ptFee);
 
@@ -229,7 +227,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         uint256 agencyFee   = pt.price.mul(200).div(10000);
         uint256 platformFee = fee.getPlatformFee(pt.price);
         
-        platformFee = platformFee.add(pt.price.mul(200).div(10000));
+        platformFee = platformFee.sub(agencyFee);
 
         address referrer = referral.getReferrer(booking[_tokenId].buyer);
         uint256 referralFee = pt.price.mul(100).div(10000);
@@ -261,6 +259,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
           require(isBooked[_tokenId], "not booked");
           booking[_tokenId].signedAllDoc = _signedAllDoc;
     }
+
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external pure override returns (bytes4) {
         return bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"));
     }

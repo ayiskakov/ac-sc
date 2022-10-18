@@ -117,7 +117,7 @@ contract Fee is AccessControl {
         return ((_amount / factor) + 1) * factor / 10;
     }
 
-    function getCustomerFee(uint256 _amount) public view returns (uint256) {
+    function getCustomerFee(uint256 _amount) public pure returns (uint256) {
         return getPlatformFee(_amount) / 2;
     }
 

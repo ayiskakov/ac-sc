@@ -120,7 +120,7 @@ describe("Fullfill Buy", function () {
     const PRICE = eth.BigNumber.from(500).mul(ONE_DOLLAR);
 
     const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    let platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+    let platformFee = await feeContract.getCustomerFee(PRICE);
     const finalPrice = PRICE.sub(bookingFee).add(platformFee);
 
     const tokenHolderAddress = await tokenHolder.getAddress();
@@ -162,8 +162,6 @@ describe("Fullfill Buy", function () {
     const tx = marketplaceContract.connect(marketplace).fulfillBuy(2);
 
     await expect(tx).to.be.reverted;
-   
-    
   });
 
   it("Fullfill buy property that not owned by you", async function () {
@@ -171,7 +169,7 @@ describe("Fullfill Buy", function () {
     const PRICE = eth.BigNumber.from(500).mul(ONE_DOLLAR);
 
     const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    let platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+    let platformFee = await feeContract.getCustomerFee(PRICE);
     const finalPrice = PRICE.sub(bookingFee).add(platformFee);
 
     const tokenHolderAddress = await tokenHolder.getAddress();

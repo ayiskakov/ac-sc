@@ -176,7 +176,7 @@ describe("Marketplace contract initialization test", function () {
     const PRICE = eth.BigNumber.from(1).mul(ONE_DOLLAR);
 
     const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    const platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+    const platformFee = await feeContract.getCustomerFee(PRICE);
 
     const finalPrice = PRICE.sub(bookingFee).add(platformFee);
 
@@ -228,7 +228,7 @@ describe("Marketplace contract initialization test", function () {
     const PRICE = eth.BigNumber.from(500).mul(ONE_DOLLAR);
 
     const bookingFee = PRICE.mul(BOOKING_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
-    let platformFee = PRICE.mul(PLATFORM_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
+    const platformFee = await feeContract.getCustomerFee(PRICE);
     const agencyFee = PRICE.mul(AGENCY_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
     // const referralFee = PRICE.mul(REFERRAL_FEE_PERCENTAGE).div(HUNDRED_PERCENT);
 
@@ -280,8 +280,7 @@ describe("Marketplace contract initialization test", function () {
     const tx = marketplaceContract.connect(marketplace).fulfillBuy(1);
 
     await expect(tx).not.to.be.reverted;
-    // console.log(await (await tx).wait())
-    platformFee = platformFee.add(platformFee.mul(200).div(10000));
+    
     const balanceAgency = await usdcContract.balanceOf(agencyAddress);
     const balanceTokenHolder = await usdcContract.balanceOf(tokenHolderAddress);
     // const balanceMarketplace = await usdcContract.balanceOf(buyerAddress);
@@ -364,8 +363,5 @@ describe("Marketplace contract initialization test", function () {
     const tx = marketplaceContract.connect(marketplace).buyProperty(1);
   
     await expect(tx).to.be.reverted;
-
-    
-   
   });
 });
