@@ -4,7 +4,7 @@ pragma solidity ^0.8.1;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-// import "hardhat/console.sol";
+
 
 contract Fee is AccessControl {
 
@@ -69,50 +69,11 @@ contract Fee is AccessControl {
             return 0;
         }
 
-        uint256 factor;
+        uint256 factor = 1;
 
-        if (_amount < 10) {
-            factor = 1;
-        } else if (_amount < 100) {
-            factor = 10;
-        } else if (_amount < 1000) {
-            factor = 100;
-        } else if (_amount < 10000) {
-            factor = 1000;
-        } else if (_amount < 100000) {
-            factor = 10000;
-        } else if (_amount < 1000000) {
-            factor = 100000;
-        } else if (_amount < 10000000) {
-            factor = 1000000;
-        } else if (_amount < 100000000) {
-            factor = 10000000;
-        } else if (_amount < 1000000000) {
-            factor = 100000000;
-        } else if (_amount < 10000000000) {
-            factor = 1000000000;
-        } else if (_amount < 100000000000) {
-            factor = 10000000000;
-        } else if (_amount < 1000000000000) {
-            factor = 100000000000;
-        } else if (_amount < 10000000000000) {
-            factor = 1000000000000;
-        } else if (_amount < 100000000000000) {
-            factor = 10000000000000;
-        } else if (_amount < 1000000000000000) {
-            factor = 100000000000000;
-        } else if (_amount < 10000000000000000) {
-            factor = 1000000000000000;
-        } else if (_amount < 100000000000000000) {
-            factor = 10000000000000000;
-        } else if (_amount < 1000000000000000000) {
-            factor = 100000000000000000;
-        } else {
-            factor = 1000000000000000000;
+        for (uint256 i = 0; i < 18 && _amount > factor * 10; i++) {
+            factor = factor * 10;
         }
-        // console.log("factor: ", factor);
-        // console.log("fee: ", ((_amount / factor) + 1) * factor / 10);
-        // console.log("_amount: ", _amount);
 
         return ((_amount / factor) + 1) * factor / 10;
     }
