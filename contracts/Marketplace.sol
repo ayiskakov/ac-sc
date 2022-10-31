@@ -160,17 +160,13 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     /// @notice End booking of property with transfering 10% to platform, seller, and agency
     /// @dev no any reentrancy allowed
     /// @param _tokenId TokenId of a token to end booking
-    function endBooking(uint256 _tokenId) public onlyRole(MARKETPLACE_ROLE) noReentrant(_tokenId) {
+    function cancelBooking(uint256 _tokenId) public onlyRole(MARKETPLACE_ROLE) noReentrant(_tokenId) {
         require(isBooked[_tokenId], "not booked");
         isBooked[_tokenId] = false;
 
         Property memory pt = properties[address(this)][_tokenId];
 
         uint256 bookingFee  = booking[_tokenId].fee;
-
-        // uint256 sellerFee   = fee.getSellerFee(bookingFee);
-        // uint256 platformFee = fee.getPlatformFee(bookingFee);
-        // uint256 agencyFee   = fee.getAgencyFee(bookingFee);
 
         uint256 sellerFee   = bookingFee.mul(5000).div(10000);
         uint256 platformFee = bookingFee.mul(4000).div(10000);

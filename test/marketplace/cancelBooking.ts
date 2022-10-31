@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { ethers as eth } from "ethers";
 
-describe("End Booking", function () {
+describe("Cancel Booking", function () {
   let usdcContract: eth.Contract;
   let usdcFactory: eth.ContractFactory;
 
@@ -119,7 +119,7 @@ describe("End Booking", function () {
       .setVerificationUser(buyerAddress, true);
   });
 
-  it("End Booking for tokenId does not exist", async function () {
+  it("Cancel Booking for tokenId does not exist", async function () {
       
     const tokenHolderAddress = await tokenHolder.getAddress();
 
@@ -133,13 +133,13 @@ describe("End Booking", function () {
       .increaseAllowance(marketplaceContract.address, bookingFee);
 
     await marketplaceContract.connect(marketplace).bookProperty(1, false);
-    const tx = marketplaceContract.connect(marketplace).endBooking(2);
+    const tx = marketplaceContract.connect(marketplace).cancelBooking(2);
     
     await expect(tx).to.be.reverted;
     
   });
 
-  it("End Booking by other than marketplace role", async function () {
+  it("Cancel Booking by other than marketplace role", async function () {
       
     const tokenHolderAddress = await tokenHolder.getAddress();
 
@@ -153,13 +153,13 @@ describe("End Booking", function () {
       .increaseAllowance(marketplaceContract.address, bookingFee);
  
     await marketplaceContract.connect(marketplace).bookProperty(1, false);
-    const tx = marketplaceContract.connect(owner).endBooking(1);
+    const tx = marketplaceContract.connect(owner).cancelBooking(1);
     
     await expect(tx).to.be.reverted;
       
   });
 
-  it("Successful End Booking", async function () {
+  it("Successful Cancel Booking", async function () {
       
     const tokenHolderAddress = await tokenHolder.getAddress();
 
@@ -173,7 +173,7 @@ describe("End Booking", function () {
       .increaseAllowance(marketplaceContract.address, bookingFee);
  
     await marketplaceContract.connect(marketplace).bookProperty(1, false);
-    const tx = marketplaceContract.connect(marketplace).endBooking(1);
+    const tx = marketplaceContract.connect(marketplace).cancelBooking(1);
     await expect(tx).not.to.be.reverted; 
       
   });
