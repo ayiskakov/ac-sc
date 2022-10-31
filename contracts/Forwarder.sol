@@ -1,7 +1,7 @@
-// Contract Name: MetaTX
+// Contract Name: Forwarderx
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/metatx/MinimalForwarder.sol";
+import "@opengsn/contracts/src/forwarder/Forwarder.sol";
 
-contract MetaTX is MinimalForwarder {}
+contract Forwarderx is Forwarder {}

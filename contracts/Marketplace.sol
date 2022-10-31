@@ -11,18 +11,14 @@ import "./Referral.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
 
-
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+import "@opengsn/contracts/src/ERC2771Recipient.sol";
 
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
-import "@openzeppelin/contracts/metatx/MinimalForwarder.sol";
 
-import "hardhat/console.sol";
-
-contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
-    bytes32 public constant MARKETPLACE_ROLE = keccak256("MARKETPLACE");
+contract Marketplace is ERC2771Recipient, ERC1155Receiver, AccessControl {
+    bytes32 public constant MARKETPLACE_MANAGER_ROLE = keccak256("MANAGER");
 
     RealEstate private realEstate; 
     Verifier   private verifier;
@@ -77,7 +73,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         address _referral, 
         address _usdcAddress, 
         address _forwarder
-    ) ERC2771Context(_forwarder) {
+    ) {
         platform = _platform;
 
         realEstate = RealEstate(_realEstate);
@@ -85,16 +81,17 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         fee        = Fee(_fee);
         referral   = Referral(_referral);
         usdC       = IERC20(_usdcAddress);
-        
+
+        _setTrustedForwarder(_forwarder);   
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
-        return ERC2771Context._msgSender();
+    function _msgSender() internal view virtual override(Context, ERC2771Recipient) returns (address sender) {
+        return ERC2771Recipient._msgSender();
     }
 
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
-        return ERC2771Context._msgData();
+    function _msgData() internal view virtual override(Context, ERC2771Recipient) returns (bytes calldata) {
+        return ERC2771Recipient._msgData();
     }
 
     modifier noReentrant(uint256 _tokenId) {
@@ -110,9 +107,9 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     /// @param _set Boolean if false revokes role
     function setMarketplace(address _marketplace, bool _set) public onlyRole(DEFAULT_ADMIN_ROLE) {
         if (_set) {
-            _setupRole(MARKETPLACE_ROLE, _marketplace);
+            _setupRole(MARKETPLACE_MANAGER_ROLE, _marketplace);
         } else {
-            _revokeRole(MARKETPLACE_ROLE, _marketplace);
+            _revokeRole(MARKETPLACE_MANAGER_ROLE, _marketplace);
         }
     }
 
@@ -160,7 +157,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     /// @notice End booking of property with transfering 10% to platform, seller, and agency
     /// @dev no any reentrancy allowed
     /// @param _tokenId TokenId of a token to end booking
-    function cancelBooking(uint256 _tokenId) public onlyRole(MARKETPLACE_ROLE) noReentrant(_tokenId) {
+    function cancelBooking(uint256 _tokenId) public onlyRole(MARKETPLACE_MANAGER_ROLE) noReentrant(_tokenId) {
         require(isBooked[_tokenId], "not booked");
         isBooked[_tokenId] = false;
 
@@ -215,7 +212,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     /// @notice Fulfill buy of token that has been bought by function buyProperty
     /// @dev no any reentrancy allowed
     /// @param _tokenId TokenId of a token to fulfill buy
-    function fulfillBuy(uint256 _tokenId) public onlyRole(MARKETPLACE_ROLE) noReentrant(_tokenId) {
+    function fulfillBuy(uint256 _tokenId) public onlyRole(MARKETPLACE_MANAGER_ROLE) noReentrant(_tokenId) {
         require(isBooked[_tokenId], "not booked");
         require(booking[_tokenId].paid, "not paid");
 
@@ -233,10 +230,6 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         if (booking[_tokenId].poa) {
             platformFee = platformFee.add(fee.getPoaFee());
         }
-        // pt.price     500000000
-        // sellerPart   475000000
-        // agencyFee     10000000
-        // platformFee   50000000
 
         if (referrer != address(0)) {
             platformFee = platformFee.sub(referralFee);
@@ -247,11 +240,6 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
             }
         }
 
-        console.log("pt.price", pt.price);
-        console.log("sellerPart", sellerPart);
-        console.log("agencyFee", agencyFee);
-        console.log("platformFee", platformFee);
-
         require(usdC.transfer(pt.seller, sellerPart), "not enough usdC");
         require(usdC.transfer(pt.agency, agencyFee), "not enough usdC");
         require(usdC.transfer(platform, platformFee), "not enough usdC");
@@ -261,7 +249,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
         emit PropertyTraded(_tokenId, referrer, referralFee, block.timestamp);
     }
 
-    function signedAllDoc(uint _tokenId, bool _signedAllDoc) public onlyRole(MARKETPLACE_ROLE){
+    function signedAllDoc(uint _tokenId, bool _signedAllDoc) public onlyRole(MARKETPLACE_MANAGER_ROLE){
           require(isBooked[_tokenId], "not booked");
           booking[_tokenId].signedAllDoc = _signedAllDoc;
     }
