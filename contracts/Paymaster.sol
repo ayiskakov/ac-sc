@@ -20,7 +20,7 @@ contract SingleRecipientPaymaster is BasePaymaster {
     }
 
     function versionPaymaster() external view override virtual returns (string memory){
-        return "3.0.0";
+        return "2.2.0+opengsn.recipient.ipaymaster";
     }
 
     function setTarget(address _target) external onlyOwner {
@@ -28,13 +28,13 @@ contract SingleRecipientPaymaster is BasePaymaster {
         target=_target;
     }
 
-    function _preRelayedCall(
+    function preRelayedCall(
         GsnTypes.RelayRequest calldata relayRequest,
         bytes calldata signature,
         bytes calldata approvalData,
         uint256 maxPossibleGas
     )
-    internal
+    external
     override
     virtual
     returns (bytes memory context, bool revertOnRecipientRevert) {
@@ -42,18 +42,16 @@ contract SingleRecipientPaymaster is BasePaymaster {
         require(relayRequest.request.to==target, "wrong target");
 	//returning "true" means this paymaster accepts all requests that
 	// are not rejected by the recipient contract.
+        _verifyForwarder(relayRequest);
         return ("", true);
     }
 
-    function _postRelayedCall(
+    function postRelayedCall(
         bytes calldata context,
         bool success,
         uint256 gasUseWithoutPost,
         GsnTypes.RelayData calldata relayData
-    )
-    internal
-    override
-    virtual {
+    ) external override virtual {
         (context, success, gasUseWithoutPost, relayData);
     }
 }

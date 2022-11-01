@@ -14,11 +14,11 @@ import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+// erc2771
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-import "@opengsn/contracts/src/ERC2771Recipient.sol";
 
-
-contract Marketplace is ERC2771Recipient, ERC1155Receiver, AccessControl {
+contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     bytes32 public constant MARKETPLACE_MANAGER_ROLE = keccak256("MANAGER");
 
     RealEstate private realEstate; 
@@ -74,7 +74,7 @@ contract Marketplace is ERC2771Recipient, ERC1155Receiver, AccessControl {
         address _referral, 
         address _usdcAddress, 
         address _forwarder
-    ) {
+    ) ERC2771Context(_forwarder) {
         platform = _platform;
 
         realEstate = RealEstate(_realEstate);
@@ -83,16 +83,15 @@ contract Marketplace is ERC2771Recipient, ERC1155Receiver, AccessControl {
         referral   = Referral(_referral);
         usdC       = IERC20(_usdcAddress);
 
-        _setTrustedForwarder(_forwarder);   
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Recipient) returns (address sender) {
-        return ERC2771Recipient._msgSender();
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+        return ERC2771Context._msgSender();
     }
 
-    function _msgData() internal view virtual override(Context, ERC2771Recipient) returns (bytes calldata) {
-        return ERC2771Recipient._msgData();
+    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
+        return ERC2771Context._msgData();
     }
 
     modifier noReentrant(uint256 _tokenId) {
