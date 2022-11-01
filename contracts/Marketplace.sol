@@ -65,6 +65,7 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     event PropertyPaid(uint256 indexed tokenId, uint256 dldFee, uint256 ptFee, uint256 total, address buyer, uint256 timestamp);
     event PropertyTraded(uint256 indexed tokenId, address referrer, uint256 referralFee, uint256 timestamp);
     
+    event BookingSignedAllDoc(uint256 indexed tokenId, uint256 timestamp);
 
     constructor(
         address _platform, 
@@ -252,6 +253,8 @@ contract Marketplace is ERC2771Context, ERC1155Receiver, AccessControl {
     function signedAllDoc(uint _tokenId, bool _signedAllDoc) public onlyRole(MARKETPLACE_MANAGER_ROLE){
           require(isBooked[_tokenId], "not booked");
           booking[_tokenId].signedAllDoc = _signedAllDoc;
+
+        emit BookingSignedAllDoc(_tokenId, block.timestamp);
     }
 
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external pure override returns (bytes4) {
