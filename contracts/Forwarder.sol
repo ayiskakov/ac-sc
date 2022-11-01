@@ -2,4 +2,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "@opengsn/contracts/src/forwarder/Forwarder.sol";
+
+// import MinimalForwarder from @openzeppelin/contracts/metatx/MinimalForwarder.sol
+import "@openzeppelin/contracts/metatx/MinimalForwarder.sol";
